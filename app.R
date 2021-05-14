@@ -1,6 +1,7 @@
 library(shiny)
 library(Qrator)
 library(tibble)
+library(shinyFiles)
 options(shiny.maxRequestSize = 60*1024^2)
 
 helperNames <- c("Errors", "Parent-Homozygous Markers",
@@ -26,37 +27,128 @@ ui <- fluidPage(
                         ),
                       br(),
                       fluidRow(
-                        column(width = 6, offset = 3, h4(("Required Files"))),
-                        column(width = 6, offset = 3, p(strong("Map File:"), "Group and loci for every marker in your data set, must be
-                                                        converted to a comma-separated value format. See the following image for
-                                                        the top 15 cells of an example map-as-CSV.")),
+                        column(width = 6, offset = 3, h3(("Required Files"))),
+                        column(width = 6, offset = 3, p(strong("Map File:"), "intmap11_20k")),
+                      ),
+                      fluidRow(
+                        column(width = 6, offset = 3, p(strong("Master Data Set:"), "20k_8koverlap")),
+                      ),
+                      fluidRow(
+                        column(width = 6, offset = 3, p(strong("Phenotype Data:"), "The formatting of your phenotype data must follow these rules.
+                                                        List all individuals in column A with column name 'Index'. 
+                                                        Data for each individual goes in columns B and onward. 
+                                                        Each column of phenotype data must have a descriptive column name in Row 1. 
+                                                        Pictured is an example phenotype data file.")),
                         br()
                       ),
-                      HTML('<center><img src="intmap.png"></center>'),
+                      HTML('<center><img src="phenotype_data_example.png"></center>'),
+                      fluidRow(
+                        column(width = 6, offset = 3, h3(("Features & Navigation"))),
+                        column(width = 6, offset = 3, p("Navigate ", code("Q-rator"), " by the upper navbar. The tabs are organized in sequential
+                                                        order.")),
+                        br(),
+                        column(width = 6, offset = 3, p("Upload files to File Input tab.")),
+                        br(),
+                        column(width = 6, offset = 3, p("Pick assembly settings at Config. tab and load them with the 'Load Config' 
+                                                        button on the sidebar. All settings are explained in detail in the Glossary.")),
+                        br(),
+                        column(width = 6, offset = 3, p("Verify applied settings by checking the data summary tables. You can pick which table to 
+                                                        render in the main panel via the dropdown menu titled 'Display Helper Tables'. All summary
+                                                        tables are explained in detail in the Glossary.")),
+                        br(),
+                        column(width = 6, offset = 3, p("Once you have confirmed your settings, provide a descriptive name for your current session
+                                                        of Q-rator and click the 'Export' button. All necessary files will be exported with file 
+                                                        names based on the session name you provided. Files are explained in detail in the Glossary."))
+                      ),
+                      fluidRow(
+                        column(width = 6, offset = 3, h3(("Glossary - Settings"))),
+                        column(width = 6, offset = 3, p(strong("Resolution (cM):"), "This slider controls the resolution of your map. Provide an input
+                                                        integer between 1 and 10, and this integer becomes the scale of your map. For instance, setting
+                                                        the slider to 5 cM will subset markers every 5 cM beginning with the first marker in group 1.
+                                                        Setting the slider to 0 is the max resolution and will keep every marker in your map.
+                                                        Default value is 0. ")),
+                        br(),
+                        column(width = 6, offset = 3, p(strong("Remove homozygous markers:"), "Set this flag to filter out all markers for which all parents
+                                                        of your input individuals are homozygous (AA, BB, CC, etc).  ")),
+                        br(),
+                        column(width = 6, offset = 3, p(strong("Remove by marker location:"), "Set this flag to filter out markers according to these rules:
+                                                        if more than one marker shares the same locus within a Group, the first marker in the map is kept in
+                                                        the data set, and the other(s) is/are filtered out.")),
+                        br(),
+                        column(width = 6, offset = 3, p("Example: In group 1 of the intmap11_20k, 5 SNPs exist at locus 24.104 ")),
+                        br(),
+                      ),
+                      HTML('<center><img src="marker_location_redundancies.png"></center>'),
                       br(),
                       fluidRow(
-                        column(width = 6, offset = 3, p(strong("Phenotype Data:"), "Data collected on a set of individuals. Consider which
-                                                        columns of data you wish to include in the analysis. Data format must be comma-separated
-                                                        value.")),
-                        br()
-                      ),
-                      fluidRow(
-                        column(width = 6, offset = 3, p(strong("Master Data Set:"), "Marker data on every individual in your program. The set
-                                                        of all individuals in this file must be a superset of the set of all individuals in
-                                                        your phenotype data. (Ask Ashley if programs will usually keep one of these lying around)")),
-                        br()
-                      ),
-                      fluidRow(
-                        column(width = 6, offset = 3, h4(("Features & Navigation"))),
-                        column(width = 6, offset = 3, p("Navigate ", code("Q-rator"), " by the upper navbar. The tabs are organized in sequential
-                                                        order. Though you may visit any tab at any time, tab 'Config.' will not
-                                                        be useful until you have uploaded the correct files at the 'File Input' tab.")),
+                        column(width = 6, offset = 3, p("Setting this flag will remove SNPs 870, 2101, 1562, and 1563.")),
                         br(),
-                        column(width = 6, offset = 3, p("Upload files to File Input tab. Pick assembly settings at Config. tab. Also
-                                                        provided there are several tables which summarize changes in the data set as you apply settings.
-                                                        Once you have chosen your preferred settings, load them with the 'Load Config' button on the sidebar.
-                                                        "))
-                      )
+                        column(width = 6, offset = 3, p(strong("Phenotype data:"), "This group of flags determines which columns
+                                                        of phenotype data you wish to keep in the output data file.")),
+                        br(),
+                        column(width = 6, offset = 3, p(strong("Add markers:"), "Correct any previous subsets on the markers in your data set.
+                                                        If you have removed a marker from the data set by applying a setting, you may add it
+                                                        back into the data set by providing its ID in the text field. To apply the addition,
+                                                        press the 'Load Config.' button.")),
+                        br(),
+                        column(width = 6, offset = 3, p(strong("Remove markers:"), "If you wish to remove a marker in your data set, 
+                                                        provide its ID in the text field. To apply the removal, press the 'Load Config.' 
+                                                        button.")),
+                        br(),
+                        column(width = 6, offset = 3, p(strong("Session ID:"), "Provide a descriptive name for the current session of Q-rator.
+                                                        The provided text will be used to name all exported files. You will be unable to export
+                                                        any files unless a session ID is provided."))
+                      ),
+                      fluidRow(
+                        column(width = 6, offset = 3, h3(("Glossary - Summary Tables"))),
+                        column(width = 6, offset = 3, p(strong("Errors"), "is a list of all individuals that were present in the input phenotype data file,
+                                                        but not present in the 20k_8koverlap file. If there were no clerical errors in the creation of your
+                                                        phenotype data file, then it may well be empty")),
+                        br(),
+                        column(width = 6, offset = 3, p(strong("Parent homozygous markers"), "is a subset of the master data set which shows the set of all
+                                                        parents of input individuals, and all markers for which the parents are homozygous.")),
+                        br(),
+                        column(width = 6, offset = 3, p(strong("Marker Summary (Parents)"), "is a data frame showing allele frequencies for every marker
+                                                        calculated for the set of all parents of input individuals.")),
+                        br(),
+                        column(width = 6, offset = 3, p(strong("Marker Summary (Input Set)"), "is a data frame showing allele frequencies for every marker 
+                                                        calculated for the set of all input individuals, group and locus for every marker, and whether or 
+                                                        not the marker is included in your final data set depending on the settings you applied. Column 'Included' 
+                                                        takes binary values: 1 if the marker is included in the data set, 0 if it has been removed.")),
+                        br(),
+                        column(width = 6, offset = 3, p(strong("Positive Marker Set"), "is a subset of the input set marker summary. Only rows which have value
+                                                        of 1 in the 'Included' column are present. If default settings are applied, then this set is equal to 
+                                                        the marker summary input set.")),
+                        br(),
+                        column(width = 6, offset = 3, p(strong("Negative Marker Set"), "is a subset of the input set marker summary. Only rows which have value of 0
+                                                        in the 'Included' column are present. If default settings are applied, then this data frame is empty.")),
+                        br(),
+                      ),
+                      fluidRow(
+                        column(width = 6, offset = 3, h3(("Glossary - Exported Files"))),
+                        column(width = 6, offset = 3, p(strong("Note:"), "Note: these are generic names. If you provided a session ID under the settings,
+                                                        it will be applied to all the exported files. For instance, if the session ID is 'test1', then the 
+                                                        errors file will be named", code("test1_errors.csv"), "the dat file will be called ", code('test1_dat.csv'),
+                                                        " and so on.", code("Q-rator"), " cannot handle files types such as '.map' or '.dat', so all files will
+                                                        be exported as CSVs and must be converted by the user." )),
+                        br(),
+                        column(width = 6, offset = 3, p(code("errors.csv"), "is an exported version of the errors table")),
+                        br(),
+                        column(width = 6, offset = 3, p(code("dat.csv"), "is the sheet to be used in FlexQTL, matching individuals to their pedigrees, 
+                                                        phenotype data, and marker data. Must be converted manually to DAT as it is a CSV by default")),
+                        br(),
+                        column(width = 6, offset = 3, p(code("map.csv"), "is the map file corresponding to ", code("dat.csv"), " with those SNPs present
+                                                        in ", code("dat.csv"), " represented in column A, and their Group and location in column B. Must be converted to 
+                                                        a .map file as it is a CSV by default.")),
+                        br(),
+                        column(width = 6, offset = 3, p(code("marker_count.csv"), "provides a count of SNPs per group based on the SNPs present in dat.csv. 
+                                                        Row number corresponds to group number, so the integer on row 3 is the count of group 3 SNPs present in ", 
+                                                        code("dat.csv."))),
+                        br(),
+                        br(),
+                        br(),
+                        br()
+                      ),
 
                       ),
 
@@ -82,8 +174,8 @@ ui <- fluidPage(
                       sidebarLayout(
                         sidebarPanel(
                           h4(strong("Settings")),
-                          sliderInput('resolution', 'Resolution cM (WIP)',
-                                      min=1, max=20, value=5),
+                          sliderInput('resolution', 'Resolution (cM)',
+                                      min=0, max=10, value=0),
                           checkboxInput(inputId = "remove_homozygous_markers", label = 'Remove homozygous markers', value = FALSE),
                           checkboxInput(inputId = "by_locus", "Remove by marker location", FALSE),
                           checkboxGroupInput(
@@ -103,51 +195,27 @@ ui <- fluidPage(
                           selectInput('render_helpers', 'Display Helper Tables', helperNames, selected = "Errors"),
                           hr(),
                           # selectInput('pick_dl', 'Choose File', outputNames, selected = ".dat"),
-                          h5(strong("ugly download buttons")),
-                          fluidRow(
-                            column(width=1, offset=0,
-                                   downloadButton('downloadDat',".dat")
-                                   ),
-                            column(width=1, offset=1,
-                                   downloadButton('downloadMap',".map")
-                                   )
-                          ),
-                          fluidRow(
-                            column(width=1, offset=0,
-                                   downloadButton('downloadErrors',"errors")
-                            ),
-                          column(width=1, offset=2,
-                                 downloadButton('downloadGC',"group count")
-                          )
-                          ),
+                          textInput('sessionID', "Session ID"),
+                          
+                          h5(strong("Export Files")),
+                          shinyDirButton('folder', 'Select a folder', 'Please select a folder', FALSE),
+                          actionButton('export', "Export")
                         ),
                         mainPanel(
                           uiOutput('tb2')
                         )
                       )
                     )
-             # tabPanel("Deploy",
-             #          sidebarLayout(
-             #            sidebarPanel(
-             #              # checkboxInput(inputId = ".dat", label = '.dat', value = TRUE),
-             #              # checkboxInput(inputId = ".map", ".map", TRUE),
-             #              # checkboxInput("count", "Marker count by group", TRUE),
-             #              # textInput('export_path', "Export to this filepath"),
-             #              #C:/Users/Sean/Downloads/makeD package trials/exports
-             #              # h4(strong("File Names")),
-             #              # textInput('.dat_name', ".dat file name"),
-             #              # textInput('.map_name', ".map file name"),
-             #              
-             #            ),
-             #            mainPanel(
-             #              uiOutput("LOL"))
-             #          )
-             #        )
              )
 )
 
 
 server <- function(session, input,output){
+  
+  volumes = getVolumes()()
+  
+  shinyDirChoose(input, 'folder', roots=volumes, session = session)
+
   #Cleaning up inputs before doing anything else
         master <- reactive({
           file1 <- input$master
@@ -192,7 +260,7 @@ server <- function(session, input,output){
             return()
           }
           else{
-            parent_SNP_summary(phen(), master(), map(), 2, 7)
+            parent_SNP_summary(phen(), master(), map())
           }
         })
 
@@ -201,39 +269,42 @@ server <- function(session, input,output){
             return()
           }
           else{
-            return(parent_SNPs_culled(phen(), master(), map(), 2, 7))
+            return(parent_SNPs_culled(phen(), master(), map()))
           }
         })
         input_summary <- eventReactive(input$load, {
           if(is.null(map()) | is.null(phen()) | is.null(master())){
             return()
           }
-          else if(input$remove_homozygous_markers == FALSE &
+          
+          temp_summary <- input_SNP_summary(phen(), master(), map())
+          
+          if(input$remove_homozygous_markers == FALSE &
              input$by_locus == FALSE){
-            input_SNP_summary(phen(), master(), map(), 2, 7)
+            input_SNP_summary(phen(), master(), map())
           }
           else if(input$remove_homozygous_markers == TRUE &
                   input$by_locus == FALSE){
-            temp_summary <- input_SNP_summary(phen(), master(), map(), 2, 7)
-            temp_parent_summary <- parent_SNP_summary(phen(), master(), map(), 2, 7)
+            temp_parent_summary <- parent_SNP_summary(phen(), master(), map())
             p_homozygous_vector <- to_extract_parent_homozygous(temp_parent_summary)
             temp_summary <- subtraction_input_summary(temp_summary, p_homozygous_vector)
-            return(temp_summary)
           }
           else if(input$remove_homozygous_markers == FALSE &
                   input$by_locus == TRUE){
-            temp_summary <- input_SNP_summary(phen(), master(), map(), 2, 7)
             temp_summary <- cull_by_locus(temp_summary)
-            return(temp_summary)
           }
           else{
-            temp_summary <- input_SNP_summary(phen(), master(), map(), 2, 7)
-            temp_parent_summary <- parent_SNP_summary(phen(), master(), map(), 2, 7)
+            temp_parent_summary <- parent_SNP_summary(phen(), master(), map())
             p_homozygous_vector <- to_extract_parent_homozygous(temp_parent_summary)
             temp_summary <- subtraction_input_summary(temp_summary, p_homozygous_vector)
             temp_summary <- cull_by_locus(temp_summary)
-            return(temp_summary)
           }
+          
+          if(input$resolution > 0){
+            temp_summary <- summary_resolution_adjust(input$resolution, map(), temp_summary)
+          }
+          
+          return(temp_summary)
         })
 
         positive_marker_set <- reactive({
@@ -267,7 +338,7 @@ server <- function(session, input,output){
                 phen_filter[x] <- T
               }
             }
-            temp_out <- update_out_by_summary(phen(), master(), 2, 7, input_summary())
+            temp_out <- update_out_by_summary(phen(), master(), input_summary())
             temp_out_filter <- c(rep(T,5), phen_filter, rep(T, length(temp_out)-(5+phen_len)))
             return(temp_out[,temp_out_filter])
           }
@@ -379,44 +450,38 @@ server <- function(session, input,output){
       tableOutput("negative_marker_set_frame")
     }
   })
-  
-  
-  
-  output$downloadDat <- downloadHandler(
-    filename = function(){
-      paste("dat", ".csv", sep="")
-    },
-    content = function(file){
-      write.table(dat_file(), file, row.names = FALSE, col.names = FALSE, sep=',', na="")
+
+  observeEvent(input$export,   {
+    if(!is.null(input$folder)){
+      fileinfo <- parseSavePath(volumes, input$folder)
+      path <- as.character(fileinfo$datapath)
+      setwd(path)
+      if(!is.null(group_count()) & !is.null(map_file()) & !is.null(errors())
+         & !is.null(dat_file())){
+        write.table(dat_file(), 
+                    paste(input$sessionID, "_dat", ".csv", sep = ''),
+                    row.names = FALSE, 
+                    col.names = FALSE, 
+                    sep=',', na="")
+        write.table(group_count(), 
+                    paste(input$sessionID, "_marker_count", ".csv", sep = ''),
+                    row.names = FALSE, 
+                    col.names = FALSE, 
+                    sep=',', na="")
+        write.table(errors(), 
+                    paste(input$sessionID, "_errors", ".csv", sep = ''),
+                    row.names = FALSE, 
+                    col.names = TRUE, 
+                    sep=',', na="")
+        write.table(map_file(), 
+                    paste(input$sessionID, "_map", ".csv", sep = ''),
+                    row.names = FALSE, 
+                    col.names = TRUE, 
+                    sep=',', na="")
+      }
     }
-  )
+  })
   
-  output$downloadErrors <- downloadHandler(
-    filename = function(){
-      paste("errors", ".csv", sep="")
-    },
-    content = function(file){
-      write.table(errors(), file, row.names = FALSE, col.names = TRUE, sep=',', na="")
-    }
-  )
-  
-  output$downloadMap <- downloadHandler(
-    filename = function(){
-      paste("map", ".csv", sep="")
-    },
-    content = function(file){
-      write.table(map_file(), file, row.names = FALSE, col.names = TRUE, sep=',', na="")
-    }
-  )
-  
-  output$downloadGC <- downloadHandler(
-    filename = function(){
-      paste("marker count by group", ".csv", sep="")
-    },
-    content = function(file){
-      write.table(group_count(), file, sep = "\t", row.names = FALSE, col.names = FALSE)
-    }
-  )
 }
 
 shinyApp(ui = ui, server = server)
